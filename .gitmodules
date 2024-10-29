@@ -1,0 +1,9 @@
+[submodule "frontend/http"]
+	path = frontend/http
+	url = git@github.com:akobashikawa/mse-tienda-http.git
+[submodule "backend/gateway"]
+	path = backend/gateway
+	url = git@github.com:akobashikawa/mse-tienda-gateway-express.git
+[submodule "backend/productos"]
+	path = backend/productos
+	url = git@github.com:akobashikawa/mse-tienda-productos-springboot.git

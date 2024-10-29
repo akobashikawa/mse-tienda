@@ -1,0 +1,74 @@
+services:
+      
+  tienda-frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:80"
+    volumes:
+      - ./frontend/public:/usr/share/nginx/html
+    networks:
+      - tienda_network
+
+  tienda-gateway:
+    build:
+      context: ./backend/gateway 
+      dockerfile: Dockerfile
+    ports:
+      - "8080:3000"
+    networks:
+      - tienda_network
+    volumes:
+      - ./backend/gateway:/app
+    environment:
+      - NODE_ENV=development
+      
+  tienda-productos:
+    build:
+      context: ./backend/productos
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/tienda
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
+    networks:
+      - tienda_network
+    depends_on:
+      pg_productos:
+        condition: service_healthy
+      
+  nats:
+    image: nats:latest
+    ports:
+      - "4222:4222"
+    networks:
+      - tienda_network
+      
+  pg_productos:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tienda_productos
+    ports:
+      - "5432:5432"
+    networks:
+      - tienda_network
+    volumes:
+      - pg_productos_data:/var/lib/postgresql/data
+      - ./backend/productos/postgres-init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  tienda_network:
+    driver: bridge
+
+volumes:
+  pg_productos_data:
